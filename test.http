@@ -1,0 +1,9 @@
+@uri = http://127.0.0.1:8081/
+###
+POST {{uri}}add
+Content-Type: application/json
+
+{
+  "tiXing": "danxuan",
+  "tiKu": "gaoshu"
+}
