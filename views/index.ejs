@@ -1,11 +1,39 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <div class="content">
+    <div class="title">
+      <h1>Magisk_Q's Space</h1>
+    </div>
+    <div class="img">
+      <img src="https://static.hltv.org/images/galleries/12140-full/1583090017.4027.jpeg" alt="">
+    </div>
+  </div>
+</body>
+<script type="text/javascript">
+  var height = document.body.clientHeight
+  document.getElementById("content").style.height= height + "px"
+</script>
+<style>
+    body{
+      display: flex;
+      justify-content: center;
+    }
+    h1{
+      text-align: center;
+    }
+    .img{
+      margin-top: 50px;
+    }
+    img{
+      width: 800px;
+      height: 500px;
+    }
+  </style>
 </html>

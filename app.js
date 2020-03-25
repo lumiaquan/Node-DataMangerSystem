@@ -6,6 +6,8 @@ var logger = require('morgan');
 var qs = require('querystring');
 var bodyParser = require('body-parser')
 var url = require("url");
+var MongoClient = require('mongodb').MongoClient;
+var mongourl = 'mongodb://localhost:27017/';
 
 var multipart = require('connect-multiparty');
 var multipartMiddleware = multipart();
@@ -19,7 +21,7 @@ var imageRouter = require('./routes/image')
 var app = express();
 
 
-app.use(bodyParser.json({limit: '1mb'}));  //这里指定参数使用 json 格式
+app.use(bodyParser.json({ limit: '1mb' }));  //这里指定参数使用 json 格式
 app.use(bodyParser.urlencoded({
   extended: true
 }));
@@ -50,43 +52,74 @@ app.use('/users', usersRouter);
 app.use('/image', imageRouter);
 // app.use('/addquestion',addquestionRouter)
 
-app.use(bodyParser.urlencoded({extended:false})) 
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
-app.get('/addquestion',function (req, res, next){
-  var getStr = url.parse(req.url).query;
-  console.log(getStr)
-  res.end('success!')
-})
-app.post('/addquestion',function (req, res, next) {
-  
-var query = url.parse(req.url).query;
-  console.log(res.body)
-  console.log(query)
-  var postStr = ''
-  console.log('start1')
-  req.on('data', (chunk) => {
-    console.log('start2')
-    postStr += chunk
-  })
 
-  req.on('end', (chunk) => {  //接收完成后的操作
-    postStr = qs.parse(postStr);
-    console.log(postStr)
-    res.send({
-      code: 200
-    });
+app.get('/getQuestion', function (req, res) {
+  var params = url.parse(req.url, true).query;
+  var dbName = params.tiku
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    if (err) {
+      console.log(err)
+    }
+    const db = client.db(dbName)
+    db.collection(params.zhuti).find({ "zhangjie": params.zhangjie }).toArray((err, data) => {
+      if (err) {
+        console.log(err)
+      }
+      console.log("okokok")
+      client.close()
+      res.send(data)
+    })
   })
-
 })
+
+
 
 app.post('/add', function (req, res) {
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
-  console.log(postStr2)
-  res.send({
-    code: 200
-  })
+  var dbName = postStr2.tiku
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    const db = client.db(dbName);  //数据库db对象
+    db.collection(postStr2.zhuti).find({ "zhangjie": postStr2.zhangjie }).toArray((err, data) => {
+      if (err) {
+        console.log(err)
+      }
+      postStr2.number = (data.length + 1).toString()
+      console.log(data[0])
+      db.collection(postStr2.zhuti).insertOne(postStr2, function (err, reslut) {
+        if (err) {
+          console.log(err)
+        }
+        console.log("插入成功！")
+        client.close()
+        res.send({
+          code: 200
+        })
 
+      })
+    })
+  })
+});
+
+app.post('/addzhangjie', function (req, res) {
+  var postStr1 = qs.stringify(req.body)
+  var postStr2 = qs.parse(postStr1)
+  var dbName = "zhangjieguanli"
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    const db = client.db(dbName);  //数据库db对象
+    db.collection(postStr2.tiku).insertOne({ "zhuti": postStr2.zhuti, "zhangjie": postStr2.zhangjie }, function (err, reslut) {
+      if (err) {
+        console.log(err)
+      }
+      console.log("添加成功")
+      client.close()
+      res.send({
+        code: 200
+      })
+    })
+  })
 });
 
 // catch 404 and forward to error handler
@@ -109,7 +142,7 @@ app.use(function (err, req, res, next) {
 
 http.createServer(function (req, res) {
   app(req, res)
-}).listen(8081);
+}).listen(8081,'0.0.0.0');
 
 console.log('Server running at http://127.0.0.1:8081/');
 

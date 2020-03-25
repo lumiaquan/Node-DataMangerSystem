@@ -1,9 +1,21 @@
 @uri = http://127.0.0.1:8081/
 ###
 POST {{uri}}add
-Content-Type: application/json
+# Content-Type: application/json
 
 {
   "tiXing": "danxuan",
   "tiKu": "gaoshu"
+}
+
+###
+GET {{uri}}getQuestion?tiku=zhengzhi&zhuti=马原&zhangjie=zhangjie1
+###
+POST {{uri}}add
+ Content-Type: application/json
+
+{
+  "tiku": "zhengzhi",
+  "zhangjie": "第一章毛泽东思想及其历史地位",
+  "zhuti": "毛中特"
 }
