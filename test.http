@@ -19,3 +19,35 @@ POST {{uri}}add
   "zhangjie": "第一章毛泽东思想及其历史地位",
   "zhuti": "毛中特"
 }
+###
+
+POST {{uri}}addUserInfo
+ Content-Type: application/json
+
+{
+  "nickName": "S1mple",
+	"avatarUrl": "123",
+	"openId": "abcdefg"
+}
+
+###
+
+POST {{uri}}addCuoti
+ Content-Type: application/json
+
+{
+	"openId": "abcdefg",
+  "cuotiList": ["888","456"]
+}
+###
+POST {{uri}}addZhangjie
+ Content-Type: application/json
+
+{
+	"tiku": "政治",
+  "zhuti": "毛泽东思想和中国特色社会主义理论体系概论",
+  "zhangjie": "第二章：新民主主义革命理论",
+  "subzhuti": "毛中特"
+}
+###
+GET {{uri}}getMulu?tiku=zhengzhi

@@ -67,7 +67,7 @@ app.get('/getQuestion', function (req, res) {
       if (err) {
         console.log(err)
       }
-      console.log("okokok")
+      console.log("获取questionList成功！")
       client.close()
       res.send(data)
     })
@@ -103,13 +103,16 @@ app.post('/add', function (req, res) {
   })
 });
 
-app.post('/addzhangjie', function (req, res) {
+app.post('/addUserInfo', function (req,res){
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
-  var dbName = "zhangjieguanli"
+  postStr2["cuotiList"] = []
+  postStr2["thumbsUp"] = []
+  postStr2["collection"] = []
+  var dbName = "userInfo"
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
-    db.collection(postStr2.tiku).insertOne({ "zhuti": postStr2.zhuti, "zhangjie": postStr2.zhangjie }, function (err, reslut) {
+    db.collection("userInfo").insertOne(postStr2, function (err, reslut) {
       if (err) {
         console.log(err)
       }
@@ -120,7 +123,97 @@ app.post('/addzhangjie', function (req, res) {
       })
     })
   })
+})
+
+app.post('/addCuoti', function (req,res){
+  var postStr1 = qs.stringify(req.body)
+  var postStr2 = qs.parse(postStr1)
+  var dbName = "userInfo"
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    const db = client.db(dbName);  //数据库db对象
+    db.collection("userInfo").find({"openId": postStr2.openId}).toArray(function(err,reslut){
+      if (err) {
+        console.log(err)
+      }
+      for(var i=0;i<reslut[0].cuotiList.length;i++){
+        var a = postStr2.cuotiList.includes(reslut[0].cuotiList[i])
+        if(a == false){
+          postStr2.cuotiList.push(reslut[0].cuotiList[i])
+        }
+      }
+    })
+    db.collection("userInfo").updateOne({"openId":postStr2.openId},{$set:{"cuotiList":postStr2.cuotiList}}, function (err, reslut) {
+      if (err) {
+        console.log(err)
+      }
+      console.log("修改cuotiList成功")
+      client.close()
+      res.send({
+        code: 200
+      })
+    })
+  })
+})
+
+app.post('/addZhangjie', function (req, res) {
+  var postStr1 = qs.stringify(req.body)
+  var postStr2 = qs.parse(postStr1)
+  var dbName = "zhangjieguanli"
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    const db = client.db(dbName);  //数据库db对象
+    db.collection(postStr2.tiku).find({"zhuti": postStr2.zhuti}).toArray((err,data)=>{
+      if(data.length>0){
+        for(var i=0;i<data[0].zhangjie.length;i++){
+          if(data[0].zhangjie[i].includes(postStr2.zhangjie)){
+
+          }else{
+            data[0].zhangjie.push(postStr2.zhangjie)
+          }
+        }
+        db.collection(postStr2.tiku).updateOne({"zhuti": postStr2.zhuti},{$set:{"zhangjie":data[0].zhangjie}},function(err,reslut){
+          if (err) {
+            console.log(err)
+          }
+          console.log("更新章节成功！")
+          client.close()
+          res.send({
+            code: 200
+          })
+        })
+      }else{
+        db.collection(postStr2.tiku).insertOne({ "zhuti": postStr2.zhuti, "zhangjie": [postStr2.zhangjie], "subzhuti": postStr2.subzhuti }, function (err, reslut) {
+          if (err) {
+            console.log(err)
+          }
+          console.log("添加成功！")
+          client.close()
+          res.send({
+            code: 200
+          })
+        })
+      }
+    })
+  })
 });
+
+app.get('/getMulu', function (req, res) {
+  var params = url.parse(req.url, true).query;
+  var dbName = "zhangjieguanli"
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    if (err) {
+      console.log(err)
+    }
+    const db = client.db(dbName)
+    db.collection(params.tiku).find({}).toArray((err, data) => {
+      if (err) {
+        console.log(err)
+      }
+      console.log("获取目录成功！")
+      client.close()
+      res.send(data)
+    })
+  })
+})
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -142,7 +235,7 @@ app.use(function (err, req, res, next) {
 
 http.createServer(function (req, res) {
   app(req, res)
-}).listen(8081,'0.0.0.0');
+}).listen(8081);
 
 console.log('Server running at http://127.0.0.1:8081/');
 
