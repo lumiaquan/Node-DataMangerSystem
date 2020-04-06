@@ -11,7 +11,7 @@ var mongourl = 'mongodb://localhost:27017/';
 
 var multipart = require('connect-multiparty');
 var multipartMiddleware = multipart();
-
+var ObjectId = require('mongodb').ObjectId
 
 var http = require('http');
 var indexRouter = require('./routes/index');
@@ -52,18 +52,20 @@ app.use('/users', usersRouter);
 app.use('/image', imageRouter);
 // app.use('/addquestion',addquestionRouter)
 
+var dbName = "xiaotiku"
+
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 
 app.get('/getQuestion', function (req, res) {
   var params = url.parse(req.url, true).query;
-  var dbName = params.tiku
+  console.log(params)
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     if (err) {
       console.log(err)
     }
     const db = client.db(dbName)
-    db.collection(params.zhuti).find({ "zhangjie": params.zhangjie }).toArray((err, data) => {
+    db.collection("questions").find({"zhuti":params.zhuti,"zhangjie":params.zhangjie}).toArray((err, data) => {
       if (err) {
         console.log(err)
       }
@@ -79,16 +81,15 @@ app.get('/getQuestion', function (req, res) {
 app.post('/add', function (req, res) {
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
-  var dbName = postStr2.tiku
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
-    db.collection(postStr2.zhuti).find({ "zhangjie": postStr2.zhangjie }).toArray((err, data) => {
+    db.collection("questions").find({ "zhangjie": postStr2.zhangjie,"zhuti": postStr2.zhuti }).toArray((err, data) => {
       if (err) {
         console.log(err)
       }
       postStr2.number = (data.length + 1).toString()
       console.log(data[0])
-      db.collection(postStr2.zhuti).insertOne(postStr2, function (err, reslut) {
+      db.collection("questions").insertOne(postStr2, function (err, reslut) {
         if (err) {
           console.log(err)
         }
@@ -109,7 +110,6 @@ app.post('/addUserInfo', function (req,res){
   postStr2["cuotiList"] = []
   postStr2["thumbsUp"] = []
   postStr2["collection"] = []
-  var dbName = "userInfo"
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
     db.collection("userInfo").insertOne(postStr2, function (err, reslut) {
@@ -128,7 +128,6 @@ app.post('/addUserInfo', function (req,res){
 app.post('/addCuoti', function (req,res){
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
-  var dbName = "userInfo"
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
     db.collection("userInfo").find({"openId": postStr2.openId}).toArray(function(err,reslut){
@@ -136,9 +135,9 @@ app.post('/addCuoti', function (req,res){
         console.log(err)
       }
       for(var i=0;i<reslut[0].cuotiList.length;i++){
-        var a = postStr2.cuotiList.includes(reslut[0].cuotiList[i])
+        var a = postStr2.cuotiList.includes(reslut.cuotiList[i])
         if(a == false){
-          postStr2.cuotiList.push(reslut[0].cuotiList[i])
+          postStr2.cuotiList.push(reslut.cuotiList[i])
         }
       }
     })
@@ -155,13 +154,52 @@ app.post('/addCuoti', function (req,res){
   })
 })
 
+app.get('/getCuoti',function (req,res){
+  var params = url.parse(req.url, true).query;
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
+    if (err) {
+      console.log(err)
+    }
+    const db = client.db(dbName)
+    db.collection("userInfo").find({"openId":params.openId}).toArray((err, data) => {
+      if (err) {
+        console.log(err)
+      }
+      data1 = data
+      console.log("获取用户数据成功！")
+      client.close()
+      res.send(data)
+    })
+  })
+})
+
+app.post('/getCuotiList', function (req, res){
+  var postStr = req.body.cuotiList
+  for(var i=0;i<postStr.length;i++){
+    postStr[i] = ObjectId(postStr[i])
+  }
+  var cuotiList = []
+  MongoClient.connect(mongourl, { useUnifiedTopology: true }, function(err,client){
+    if (err) {
+      console.log(err)
+    }
+    const db = client.db(dbName)
+    db.collection("questions").find({"_id": {$in: postStr}}).toArray((err,data)=>{
+      if(err){
+        console.log(err)
+      }
+      console.log(data)
+      res.send(data)
+    })
+  })
+})
+
 app.post('/addZhangjie', function (req, res) {
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
-  var dbName = "zhangjieguanli"
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
-    db.collection(postStr2.tiku).find({"zhuti": postStr2.zhuti}).toArray((err,data)=>{
+    db.collection("zhangjieguanli").find({"zhuti": postStr2.zhuti,"tiku": postStr2.tiku}).toArray((err,data)=>{
       if(data.length>0){
         for(var i=0;i<data[0].zhangjie.length;i++){
           if(data[0].zhangjie[i].includes(postStr2.zhangjie)){
@@ -170,7 +208,7 @@ app.post('/addZhangjie', function (req, res) {
             data[0].zhangjie.push(postStr2.zhangjie)
           }
         }
-        db.collection(postStr2.tiku).updateOne({"zhuti": postStr2.zhuti},{$set:{"zhangjie":data[0].zhangjie}},function(err,reslut){
+        db.collection("zhangjieguanli").updateOne({"zhuti": postStr2.zhuti},{$set:{"zhangjie":data[0].zhangjie}},function(err,reslut){
           if (err) {
             console.log(err)
           }
@@ -181,7 +219,7 @@ app.post('/addZhangjie', function (req, res) {
           })
         })
       }else{
-        db.collection(postStr2.tiku).insertOne({ "zhuti": postStr2.zhuti, "zhangjie": [postStr2.zhangjie], "subzhuti": postStr2.subzhuti }, function (err, reslut) {
+        db.collection("zhangjieguanli").insertOne({ "tiku": postStr2.tiku, "zhuti": postStr2.zhuti, "zhangjie": [postStr2.zhangjie], "subzhuti": postStr2.subzhuti }, function (err, reslut) {
           if (err) {
             console.log(err)
           }
@@ -198,13 +236,12 @@ app.post('/addZhangjie', function (req, res) {
 
 app.get('/getMulu', function (req, res) {
   var params = url.parse(req.url, true).query;
-  var dbName = "zhangjieguanli"
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     if (err) {
       console.log(err)
     }
     const db = client.db(dbName)
-    db.collection(params.tiku).find({}).toArray((err, data) => {
+    db.collection("zhangjieguanli").find({"tiku": params.tiku}).toArray((err, data) => {
       if (err) {
         console.log(err)
       }

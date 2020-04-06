@@ -9,14 +9,14 @@ POST {{uri}}add
 }
 
 ###
-GET {{uri}}getQuestion?tiku=zhengzhi&zhuti=马原&zhangjie=zhangjie1
+GET {{uri}}getQuestion?tiku=政治&zhuti=中国近代史纲要&zhangjie=综述
 ###
 POST {{uri}}add
  Content-Type: application/json
 
 {
   "tiku": "zhengzhi",
-  "zhangjie": "第一章毛泽东思想及其历史地位",
+  "zhangjie": "导论",
   "zhuti": "毛中特"
 }
 ###
@@ -45,9 +45,14 @@ POST {{uri}}addZhangjie
 
 {
 	"tiku": "政治",
-  "zhuti": "毛泽东思想和中国特色社会主义理论体系概论",
-  "zhangjie": "第二章：新民主主义革命理论",
-  "subzhuti": "毛中特"
+  "zhuti": "中国近代史纲要",
+  "zhangjie": "第一章：反对外国侵略的斗争",
+  "subzhuti": "史纲"
 }
 ###
-GET {{uri}}getMulu?tiku=zhengzhi
+POST {{uri}}getCuotiList
+ Content-Type: application/json
+
+{
+  "cuotiList": ["5e89fba64997952b64f09520", "5e89fbe74997952b64f09521"]
+}
