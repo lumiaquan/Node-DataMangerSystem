@@ -17,6 +17,8 @@ var http = require('http');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var imageRouter = require('./routes/image')
+var moment = require('moment')
+var pattern = "YYYY-MM-DD HH:mm:ss"
 
 var app = express();
 
@@ -81,6 +83,7 @@ app.get('/getQuestion', function (req, res) {
 app.post('/add', function (req, res) {
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
+  postStr2["bijiList"] = []
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
     db.collection("questions").find({ "zhangjie": postStr2.zhangjie,"zhuti": postStr2.zhuti }).toArray((err, data) => {
@@ -121,6 +124,24 @@ app.post('/addUserInfo', function (req,res){
       res.send({
         code: 200
       })
+    })
+  })
+})
+
+app.get('/getUserList', function (req,res){
+  var params = url.parse(req.url,true).query
+  MongoClient.connect(mongourl, {useUnifiedTopology: true}, function(err,client){
+    if(err){
+      console.log(err)
+    }
+    const db = client.db(dbName)
+    db.collection("userInfo").find({}).toArray((err,data)=>{
+      if(err){
+        console.log(err)
+      }
+      console.log("获取userList成功！")
+      client.close()
+      res.send(data)
     })
   })
 })
@@ -248,6 +269,41 @@ app.get('/getMulu', function (req, res) {
       console.log("获取目录成功！")
       client.close()
       res.send(data)
+    })
+  })
+})
+
+app.post('/postBiji', function(req,res){
+  var postStr = req.body
+  postStr.time = moment(postStr.time).format(pattern)
+  MongoClient.connect(mongourl,{useUnifiedTopology : true}, function(err,client){
+    if(err){
+      console.log(err)
+    }
+    var _id = ObjectId(postStr._id)
+    const db = client.db(dbName)
+    db.collection("questions").find({"_id":_id}).toArray((err,data)=>{
+      if(err){
+        console.log(err)
+      }
+      console.log(data)
+      data[0].bijiList.unshift({
+        content: postStr.content,
+        nickName: postStr.nickName,
+        avatarUrl: postStr.avatarUrl,
+        time: postStr.time,
+        collection: []
+      })
+      db.collection("questions").updateOne({"_id": _id},{$set:{bijiList:data[0].bijiList}},function(err,reslut){
+        if(err){
+          console.log(err)
+        }
+        console.log("更新笔记列表成功！")
+        client.close()
+          res.send({
+            code: 200
+          })
+      })
     })
   })
 })
