@@ -1,5 +1,6 @@
 var createError = require('http-errors');
 var express = require('express');
+var https=require('https');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -8,6 +9,7 @@ var bodyParser = require('body-parser')
 var url = require("url");
 var MongoClient = require('mongodb').MongoClient;
 var mongourl = 'mongodb://localhost:27017/';
+var fs=require('fs');
 
 var multipart = require('connect-multiparty');
 var multipartMiddleware = multipart();
@@ -22,6 +24,9 @@ var pattern = "YYYY-MM-DD HH:mm:ss"
 
 var app = express();
 
+var privateKey=fs.readFileSync('./3745209_magiskq.top.key');
+var certificate=fs.readFileSync('./3745209_magiskq.top.pem');
+var credentials= {key:privateKey,cert:certificate};
 
 app.use(bodyParser.json({ limit: '1mb' }));  //这里指定参数使用 json 格式
 app.use(bodyParser.urlencoded({
@@ -149,19 +154,9 @@ app.get('/getUserList', function (req,res){
 app.post('/addCuoti', function (req,res){
   var postStr1 = qs.stringify(req.body)
   var postStr2 = qs.parse(postStr1)
+  console.log(postStr2.cuotiList)
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function (err, client) {
     const db = client.db(dbName);  //数据库db对象
-    db.collection("userInfo").find({"openId": postStr2.openId}).toArray(function(err,reslut){
-      if (err) {
-        console.log(err)
-      }
-      for(var i=0;i<reslut[0].cuotiList.length;i++){
-        var a = postStr2.cuotiList.includes(reslut.cuotiList[i])
-        if(a == false){
-          postStr2.cuotiList.push(reslut.cuotiList[i])
-        }
-      }
-    })
     db.collection("userInfo").updateOne({"openId":postStr2.openId},{$set:{"cuotiList":postStr2.cuotiList}}, function (err, reslut) {
       if (err) {
         console.log(err)
@@ -196,10 +191,11 @@ app.get('/getCuoti',function (req,res){
 
 app.post('/getCuotiList', function (req, res){
   var postStr = req.body.cuotiList
+  
   for(var i=0;i<postStr.length;i++){
     postStr[i] = ObjectId(postStr[i])
   }
-  var cuotiList = []
+  console.log(postStr)
   MongoClient.connect(mongourl, { useUnifiedTopology: true }, function(err,client){
     if (err) {
       console.log(err)
@@ -324,11 +320,13 @@ app.use(function (err, req, res, next) {
   res.render('error');
 });
 
-
-
+var httpsPort = "8081"
+var httpsServer = https.createServer(credentials,app);
+httpsServer.listen(httpsPort,'0.0.0.0');
+var port = "3000"
 http.createServer(function (req, res) {
   app(req, res)
-}).listen(8081);
+}).listen(port,'0.0.0.0');
 
 console.log('Server running at http://127.0.0.1:8081/');
 

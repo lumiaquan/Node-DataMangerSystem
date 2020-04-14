@@ -1,4 +1,5 @@
-@uri = http://127.0.0.1:8081/
+# @uri = http://127.0.0.1:8081/
+@uri = https://118.178.196.114:8081/
 ###
 POST {{uri}}add
 # Content-Type: application/json
@@ -9,7 +10,7 @@ POST {{uri}}add
 }
 
 ###
-GET {{uri}}getQuestion?tiku=政治&zhuti=中国近代史纲要&zhangjie=综述
+GET {{uri}}getQuestion?tiku=政治&zhuti=中国近代史纲要&zhangjie=第一章：反对外国侵略的斗争
 ###
 POST {{uri}}add
  Content-Type: application/json
@@ -36,7 +37,7 @@ POST {{uri}}addCuoti
  Content-Type: application/json
 
 {
-	"openId": "abcdefg",
+	"openId": "oRmia5SdklxEao6BVsTc0kkKRV0k",
   "cuotiList": ["888","456"]
 }
 ###
