@@ -1,5 +1,5 @@
-# @uri = http://127.0.0.1:8081/
-@uri = https://118.178.196.114:8081/
+@uri = http://127.0.0.1:8081/
+# @uri = https://118.178.196.114:8081/
 ###
 POST {{uri}}add
 # Content-Type: application/json
@@ -57,3 +57,5 @@ POST {{uri}}getCuotiList
 {
   "cuotiList": ["5e89fba64997952b64f09520", "5e89fbe74997952b64f09521"]
 }
+###
+GET  {{uri}}search?sText=嘀嘀嘀
